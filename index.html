@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QRコードスキャナー</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+    #reader { width: 100%; max-width: 400px; margin: 0 auto; }
+    #result { margin-top: 20px; font-weight: bold; color: green; }
+  </style>
+</head>
+<body>
+
+  <h2>QRコードスキャナー</h2>
+  <div id="reader"></div>
+  <div id="result">ここに読み取り結果が表示されます</div>
+
+  <script>
+    // ★ここに先ほどコピーしたGASのウェブアプリURLを貼り付けます★
+    const GAS_URL = "https://script.google.com/a/macros/ykkap.co.jp/s/AKfycbwJcCEXS3AUwuL5wn9-v0TJfvhjMO4fGaHIWkuqz3HtfmG69jilC5VocE3vLDQL-Eg/exec";
+
+    // QRコード読み取り成功時の処理
+    function onScanSuccess(decodedText, decodedResult) {
+      document.getElementById('result').innerText = "送信中: " + decodedText;
+
+      // GASへデータを送信 (CORSエラーを回避するため no-cors モードを使用)
+      fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'text/plain'
+        },
+        body: decodedText
+      })
+      .then(() => {
+        document.getElementById('result').innerText = "送信完了: " + decodedText;
+        // 連続スキャンを防ぐため、少し待ってから表示を戻すなどの処理も可能です
+      })
+      .catch((error) => {
+        document.getElementById('result').innerText = "送信エラー";
+        console.error("Error:", error);
+      });
+    }
+
+    // カメラの起動設定
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader",
+      { fps: 10, qrbox: {width: 250, height: 250} },
+      /* verbose= */ false);
+      
+    html5QrcodeScanner.render(onScanSuccess);
+  </script>
+
+</body>
+</html>
